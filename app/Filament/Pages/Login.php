@@ -13,7 +13,8 @@ class Login extends BaseLogin
             'form' => $this->form(
                 $this->makeForm()
                     ->schema([
-                        TextInput::make('個人番号')
+                        TextInput::make('personal_id')
+                            ->label('個人番号'),
                     ])
                     ->statePath('data'),
             ),
@@ -23,7 +24,7 @@ class Login extends BaseLogin
     protected function getCredentialsFromFormData(array $data): array
     {
         return [
-            'personal_id' => $data['個人番号'],
+            'personal_id' => $data['personal_id'],
             'password' => 'password',
         ];
     }
