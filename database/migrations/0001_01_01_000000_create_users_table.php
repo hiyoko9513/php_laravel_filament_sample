@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
+            // TODO ULIDに変更するか検討
             $table->id();
             $table->string('personal_id')->unique();
             $table->string('password');
+            $table->boolean('is_registered')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

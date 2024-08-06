@@ -12,6 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class User extends Authenticatable implements FilamentUser, HasName
 {
@@ -49,6 +50,11 @@ class User extends Authenticatable implements FilamentUser, HasName
         ];
     }
 
+    public function getIsTeacherAttribute()
+    {
+        return $this->roles[0]->name === '教師';
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return true;
@@ -59,8 +65,8 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->personal_id;
     }
 
-    public function roles(): BelongsToMany
+    public function roles(): MorphToMany
     {
-        return $this->belongsToMany(Role::class, 'model_has_roles', 'model_id', 'role_id');
+        return $this->morphToMany(Role::class, 'model', 'model_has_roles');
     }
 }

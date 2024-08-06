@@ -9,10 +9,15 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Resources\Pages\Page;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class UserResource extends Resource
 {
@@ -53,11 +58,20 @@ class UserResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('personal_id')->sortable(),
                 Tables\Columns\TextColumn::make('roles.name'),
+                // トグルパターン（アクション付き）
+                // Tables\Columns\ToggleColumn::make('is_registered'),
+                // アイコンパターン（アクションはaction関数で追加）
+                Tables\Columns\IconColumn::make('is_registered')
+                    ->icon(fn (): string => 'heroicon-o-check-circle')
+                    ->color(fn (bool $state): string => match ($state) {
+                        true => 'success',
+                        default => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('created_at')->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')->sortable(),
             ])
@@ -72,6 +86,13 @@ class UserResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Action::make('registered')
+                    ->accessSelectedRecords()
+                    ->action(function (Model $record, Collection $selectedRecords) {
+                        User::where(['id' => $record->id])->update(['is_registered'=>1]);
+                    })
+                    ->icon('heroicon-o-user')
+                    ->label('本登録する'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -79,6 +100,12 @@ class UserResource extends Resource
                 ]),
             ])
             ->persistFiltersInSession();
+
+        if (!Auth::user()->is_teacher) {
+            $table->modifyQueryUsing(fn (Builder $query) => $query->where(['personal_id' => Auth::user()->personal_id]));
+        }
+
+        return $table;
     }
 
     public static function getRelations(): array
